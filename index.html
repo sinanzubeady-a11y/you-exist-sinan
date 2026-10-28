@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#02040a">
+<meta name="description" content="YOU//EXIST — an interactive digital identity experience engineered by Sinan Al-Sultani.">
+<title>YOU//EXIST — SINAN AL-SULTANI</title>
+<style>
+:root{--bg:#02040a;--fg:#eaf6ff;--muted:#91a6b5;--cyan:#54eaff;--line:rgba(130,220,255,.24)}
+*{box-sizing:border-box}
+html{width:100%;min-height:100%;background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;width:100%;min-height:100vh;min-height:100dvh;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--fg);touch-action:pan-y}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.vignette,.scan{position:fixed;inset:0;pointer-events:none}
+.vignette{background:radial-gradient(circle at 50% 45%,transparent 0 24%,rgba(0,0,0,.25) 70%,rgba(0,0,0,.8) 100%)}
+.scan{opacity:.045;background:repeating-linear-gradient(0deg,transparent 0 3px,#fff 4px);mix-blend-mode:overlay}
+.ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));overflow-y:auto}
+.panel{width:100%;max-width:680px;min-width:0;margin:auto;text-align:center;transition:opacity .65s,transform .65s}
+.kicker{font-size:clamp(9px,2.6vw,11px);letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);margin:0 0 18px;overflow-wrap:anywhere}
+h1{margin:0 auto;max-width:100%;font-size:clamp(39px,11.5vw,104px);letter-spacing:-.075em;line-height:.95;font-weight:850;overflow-wrap:anywhere;text-shadow:0 0 35px rgba(84,234,255,.16)}
+.sub{margin:20px auto 0;max-width:480px;color:#9eb0bd;font-size:clamp(13px,3.7vw,15px);line-height:1.7}
+input{display:block;margin:28px auto 0;width:100%;max-width:380px;height:54px;border:1px solid var(--line);border-radius:999px;background:rgba(5,12,20,.68);color:#fff;text-align:center;outline:none;font-size:15px;letter-spacing:.1em;padding:0 18px}
+input::placeholder{color:#a0aab3;opacity:1}
+input:focus{border-color:rgba(84,234,255,.7);box-shadow:0 0 35px rgba(84,234,255,.12)}
+button{display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-height:48px;margin:13px auto 0;border:1px solid rgba(84,234,255,.4);border-radius:999px;background:rgba(84,234,255,.08);color:#dffbff;padding:12px 20px;letter-spacing:.12em;text-transform:uppercase;font-size:10px;cursor:pointer;white-space:normal}
+button:active{background:rgba(84,234,255,.2);transform:scale(.98)}
+.hud{position:fixed;top:calc(15px + env(safe-area-inset-top));left:16px;right:16px;display:flex;justify-content:space-between;gap:12px;pointer-events:none;opacity:0;transition:opacity .6s}
+.hud span{font-size:9px;letter-spacing:.16em;color:#68808f;text-transform:uppercase}
+.hud strong{color:#bcefff;font-weight:600}
+.corner{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:16px;right:16px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none;opacity:0;transition:opacity .6s}
+.signature,.hint{font-size:8px;letter-spacing:.12em;color:#66808d;text-transform:uppercase;max-width:48%}
+.hint{text-align:right}
+.hidden{opacity:0!important;transform:translateY(10px) scale(.985);pointer-events:none;position:absolute}
+.show{opacity:1!important}
+.name-display{font-size:clamp(16px,5vw,30px);letter-spacing:.2em;text-transform:uppercase;color:#dffbff;margin-top:22px;overflow-wrap:anywhere}
+.progress{width:min(180px,60%);height:1px;background:rgba(255,255,255,.08);margin:22px auto 0;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--cyan);box-shadow:0 0 14px var(--cyan);transition:width 1.8s}
+.smallprint{margin:28px auto 0;font-size:9px;letter-spacing:.15em;line-height:1.8;color:#6d8794}
+@media(min-width:700px){.ui{padding:40px}.kicker{letter-spacing:.34em}h1{font-size:clamp(70px,9vw,112px)}}
+@media(max-height:620px){.ui{align-items:flex-start;padding-top:54px;padding-bottom:54px}.kicker{margin-bottom:10px}input{margin-top:18px}.sub{margin-top:12px}.smallprint{margin-top:18px}}
+</style>
+</head>
+<body>
+<canvas id="world" aria-hidden="true"></canvas>
+<div class="vignette"></div><div class="scan"></div>
+<div class="hud" id="hud"><span>YOU//EXIST <strong>01</strong></span><span id="status">SIGNAL DETECTED</span></div>
+<main class="ui">
+  <section class="panel" id="intro">
+    <div class="kicker">SINAN//LAB · DIGITAL EXPERIENCE</div>
+    <h1>YOU//EXIST</h1>
+    <p class="sub" id="message">Don't move. I'm trying to see you.</p>
+    <form id="nameForm">
+      <input id="name" maxlength="18" autocomplete="given-name" spellcheck="false" placeholder="ENTER YOUR NAME" aria-label="Enter your name">
+      <button type="submit">ENTER THE WORLD&nbsp; ↗</button>
+    </form>
+    <div class="smallprint">A LIVING DIGITAL EXPERIENCE<br>TOUCH THE WORLD. LEAVE A TRACE.</div>
+  </section>
+  <section class="panel hidden" id="identity" aria-live="polite">
+    <div class="kicker">IDENTITY FORMING</div>
+    <div class="name-display" id="nameOut"></div>
+    <p class="sub" id="identityText">Your signal has been detected.</p>
+    <div class="progress"><i id="bar"></i></div>
+  </section>
+  <section class="panel hidden" id="final">
+    <div class="kicker">DIGITAL IDENTITY COMPLETE</div>
+    <h1 id="finalName">YOU</h1>
+    <p class="sub">You were never visiting a website.<br>You were creating it.</p>
+    <button id="again" type="button">CREATE ANOTHER IDENTITY ↗</button>
+    <div class="smallprint">ENGINEERED BY<br><strong style="color:#bcefff">SINAN AL-SULTANI</strong><br>DIGITAL EXPERIENCE DESIGNER</div>
+  </section>
+</main>
+<div class="corner" id="corner"><div class="signature">ENGINEERED BY SINAN AL-SULTANI</div><div class="hint">MOVE · TOUCH · EXPLORE</div></div>
+<script>
+(()=> {
+'use strict';
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d');
+let W=innerWidth,H=innerHeight,DPR=1,particles=[],started=false;
+const pointer={x:0,y:0,active:false},center={x:0,y:0};
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);
+  canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);
+  center.x=W/2;center.y=H/2;
+  const n=Math.min(650,Math.max(180,Math.floor(W*H/2300)));
+  particles=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,z:.2+Math.random()*.8,a:Math.random()*6.28,s:.12+Math.random()*.45,r:.4+Math.random()*1.3}));
+}
+function frame(){
+  ctx.clearRect(0,0,W,H);
+  const cx=center.x+(pointer.x-center.x)*.035,cy=center.y+(pointer.y-center.y)*.035;
+  for(const p of particles){
+    p.a+=.0015*p.z;p.x+=Math.cos(p.a)*p.s*p.z;p.y+=Math.sin(p.a)*p.s*p.z;
+    if(p.x<-3)p.x=W+3;if(p.x>W+3)p.x=-3;if(p.y<-3)p.y=H+3;if(p.y>H+3)p.y=-3;
+    if(pointer.active){const dx=p.x-pointer.x,dy=p.y-pointer.y,d=Math.hypot(dx,dy);if(d>0&&d<110){p.x+=dx/d*1.5;p.y+=dy/d*1.5}}
+    const d=Math.hypot(p.x-cx,p.y-cy),glow=started?Math.max(0,1-d/(Math.min(W,H)*.46)):0;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r+glow,0,Math.PI*2);ctx.fillStyle=`rgba(84,234,255,${.15+p.z*.5+glow*.2})`;ctx.fill();
+    if(glow>.5){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(cx+(p.x-cx)*.92,cy+(p.y-cy)*.92);ctx.strokeStyle=`rgba(84,234,255,${glow*.045})`;ctx.stroke()}
+  }
+  if(started){const g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.min(W,H)*.34);g.addColorStop(0,'rgba(84,234,255,.10)');g.addColorStop(1,'rgba(84,234,255,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize',resize,{passive:true});
+window.addEventListener('pointermove',e=>{pointer.x=e.clientX;pointer.y=e.clientY},{passive:true});
+window.addEventListener('pointerdown',e=>{pointer.x=e.clientX;pointer.y=e.clientY;pointer.active=true;setTimeout(()=>pointer.active=false,240)},{passive:true});
+resize();pointer.x=W/2;pointer.y=H/2;frame();
+const intro=document.getElementById('intro'),identity=document.getElementById('identity'),final=document.getElementById('final');
+const hud=document.getElementById('hud'),corner=document.getElementById('corner'),form=document.getElementById('nameForm'),input=document.getElementById('name');
+let timers=[];
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+form.addEventListener('submit',e=>{
+  e.preventDefault();clearTimers();
+  const n=(input.value.trim()||'UNKNOWN').slice(0,18).toUpperCase();
+  started=true;document.getElementById('nameOut').textContent=n;document.getElementById('finalName').textContent=n;
+  intro.classList.add('hidden');identity.classList.remove('hidden');hud.classList.add('show');corner.classList.add('show');
+  document.getElementById('status').textContent='BUILDING IDENTITY';
+  timers.push(setTimeout(()=>document.getElementById('bar').style.width='100%',80));
+  timers.push(setTimeout(()=>document.getElementById('identityText').textContent='Your digital world is taking shape.',850));
+  timers.push(setTimeout(()=>{identity.classList.add('hidden');final.classList.remove('hidden');document.getElementById('status').textContent='IDENTITY COMPLETE'},2600));
+});
+document.getElementById('again').addEventListener('click',()=>{clearTimers();started=false;document.getElementById('bar').style.width='0';final.classList.add('hidden');identity.classList.add('hidden');intro.classList.remove('hidden');hud.classList.remove('show');corner.classList.remove('show');document.getElementById('status').textContent='SIGNAL DETECTED';input.value='';});
+})();
+</script>
+</body>
+</html>
